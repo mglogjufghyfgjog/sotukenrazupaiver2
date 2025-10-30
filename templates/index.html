@@ -12,7 +12,7 @@
         .action-button { padding: 1.5rem; font-size: 1.25rem; font-weight: bold; border-radius: 0.75rem; transition: all 0.2s; box-shadow: 0 4px #4b5563; }
         .action-button:active { box-shadow: 0 0 #4b5563; transform: translateY(4px); }
 
-        /* ★変更点: Flaskのflashメッセージ（エラー表示）用のスタイルを追加 */
+        /* Flaskのflashメッセージ（エラー表示）用のスタイル */
         .flask-flash {
             background-color: #7f1d1d; /* 暗い赤色 */
             color: #fef2f2; /* 明るい赤系の白 */
@@ -75,11 +75,32 @@
                 </div>
             {% endif %}
 
-            {% if session.logged_in %}　
-
+            {% if session.logged_in %}
                 <div id="shelter-checkin-screen" class="screen flex flex-col h-full">
                     <h2 class="text-2xl font-bold mb-6 text-indigo-400">避難所受付 (入退所記録)</h2>
+                    <div class="bg-gray-700 p-6 rounded-lg shadow-xl flex-1">
+                        <p class="text-lg mb-4 text-gray-300">避難者証のQRコードをスキャンしてください。</p>
+
+                        <div class="mb-6">
+                            <label class="block text-xl font-semibold mb-2 text-indigo-300">入退所種別 (必須)</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <button class="action-button bg-green-600 hover:bg-green-700 text-white">入所 (チェックイン)</button>
+                                <button class="action-button bg-red-600 hover:bg-red-700 text-white">退所 (チェックアウト)</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-800 p-6 h-40 rounded-lg flex items-center justify-center text-gray-500 mb-6 border-4 border-dashed border-indigo-500">
+                            カメラ起動 & QRコード読み取りエリア
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-gray-300">避難者ID (自動入力)：</label>
+                            <input type="text" value="[スキャン結果ID]" readonly class="mt-1 p-3 w-full rounded-md bg-gray-600 text-yellow-300 border-none">
+                        </div>
+
+                        <button class="w-full action-button bg-blue-500 text-white hover:bg-blue-600 mt-4">記録を一時保存 (サーバー同期)</button>
                     </div>
+                </div>
 
                 <div id="food-distribution-screen" class="screen flex flex-col h-full">
                     <h2 class="text-2xl font-bold mb-6 text-yellow-400">炊き出し確認 (2重防止)</h2>
@@ -87,7 +108,31 @@
 
                 <div id="daily-safety-input-screen" class="screen flex flex-col h-full">
                     <h2 class="text-2xl font-bold mb-6 text-green-400">現場状況の構造化報告</h2>
+                    <div class="bg-gray-700 p-6 rounded-lg shadow-xl flex-1">
+                        <p class="text-lg mb-4 text-gray-300">避難所の現状を正確に報告してください。</p>
+
+                        <div class="mb-4">
+                            <label class="block text-xl font-semibold mb-2 text-green-300">現在避難者数 (必須)</label>
+                            <input type="number" min="0" placeholder="人数を入力" id="current-evacuees" class="mt-1 p-3 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-green-400">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-xl font-semibold mb-2 text-green-300">医療・要介護者数 (必須)</label>
+                            <input type="number" min="0" placeholder="人数を入力" id="medical-needs" class="mt-1 p-3 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-green-400">
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-xl font-semibold mb-2 text-green-300">食料の残量 (必須)</label>
+                            <select id="food-stock" class="mt-1 p-3 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-green-400">
+                                <option value="safe">3日以上持つ</option>
+                                <option value="warning">1日〜3日持つ</option>
+                                <option value="critical">本日分で尽きる</option>
+                            </select>
+                        </div>
+
+                        <button class="w-full action-button bg-blue-500 text-white hover:bg-blue-600 mt-4">状況を送信 (サーバー同期)</button>
                     </div>
+                </div>
 
                 <div id="field-chat-screen" class="screen flex flex-col h-full">
                     <h2 class="text-2xl font-bold mb-4 text-gray-400">現場チャット・レポート</h2>
