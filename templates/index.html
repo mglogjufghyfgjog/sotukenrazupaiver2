@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPi 現場デバイス操作画面</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* (提供されたCSSと同じ...省略) */
+        .screen { display: none; }
+        .rpi-container { display: flex; flex-direction: column; height: 100vh; background-color: #1f2937; color: #f3f4f6; font-family: 'Inter', sans-serif; }
+        .action-button { padding: 1.5rem; font-size: 1.25rem; font-weight: bold; border-radius: 0.75rem; transition: all 0.2s; box-shadow: 0 4px #4b5563; }
+        .action-button:active { box-shadow: 0 0 #4b5563; transform: translateY(4px); }
+
+        /* ★変更点: Flaskのflashメッセージ（エラー表示）用のスタイルを追加 */
+        .flask-flash {
+            background-color: #7f1d1d; /* 暗い赤色 */
+            color: #fef2f2; /* 明るい赤系の白 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-800">
+
+    <div class="rpi-container">
+
+        <header class="bg-blue-700 text-white p-4 shadow-lg flex justify-between items-center">
+            <h1 id="screen-title" class="text-xl font-bold">現場操作メニュー</h1>
+            {% if session.logged_in %}
+                <span class="text-sm">ようこそ, **{{ session.user_id }}** さん</span>
+            {% endif %}
+            <span class="text-sm bg-green-500 px-2 py-1 rounded-full" id="connection-status">オフライン</span>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-4 flex flex-col">
+
+            <form id="login-screen" action="{{ url_for('login') }}" method="POST" class="screen flex flex-col items-center justify-center h-full">
+                <div class="bg-gray-700 p-8 rounded-lg shadow-xl w-full max-w-sm">
+                    <h2 class="text-2xl font-bold mb-6 text-center text-blue-400">現場職員ログイン</h2>
+
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            <div class="flask-flash">
+                                {{ messages[0] }} </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    <p class="text-sm text-gray-400 mb-4">このデバイスの操作には認証が必要です。</p>
+                    <div class="mb-4">
+                        <label class="block text-gray-300">職員ID：</label>
+                        <input type="text" name="user_id" class="mt-1 p-3 w-full border border-gray-600 rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-blue-400" value="admin"> </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-300">パスワード：</label>
+                        <input type="password" name="password" class="mt-1 p-3 w-full border border-gray-600 rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-blue-400" value="pass123"> </div>
+                    <button type="submit" class="w-full action-button bg-blue-500 text-white hover:bg-blue-600">ログイン</button>
+                </div>
+            </form> {% if session.logged_in %}
+                <div id="home-screen" class="screen grid grid-cols-1 md:grid-cols-2 gap-6 place-content-center h-full">
+                    <button onclick="showScreen('shelter-checkin-screen', '避難所受付')" class="action-button bg-indigo-500 text-white hover:bg-indigo-600">
+                        避難所受付 <br><span class="text-sm font-normal">(QR: 入退所・人数確認)</span>
+                    </button>
+                    <button onclick="showScreen('food-distribution-screen', '炊き出し確認')" class="action-button bg-yellow-500 text-white hover:bg-yellow-600">
+                        炊き出し確認 <br><span class="text-sm font-normal">(QR: 2重受け取り防止)</span>
+                    </button>
+                    <button onclick="showScreen('daily-safety-input-screen', '安否・状況報告')" class="action-button bg-green-500 text-white hover:bg-green-600">
+                        安否・状況報告 <br><span class="text-sm font-normal">(現場状況の構造化入力)</span>
+                    </button>
+                    <button onclick="showScreen('field-chat-screen', '現場チャット')" class="action-button bg-gray-500 text-white hover:bg-gray-600">
+                        現場チャット <br><span class="text-sm font-normal">(構造化レポート送信)</span>
+                    </button>
+                </div>
+            {% endif %}
+
+            {% if session.logged_in %}
+
+                <div id="shelter-checkin-screen" class="screen flex flex-col h-full">
+                    <h2 class="text-2xl font-bold mb-6 text-indigo-400">避難所受付 (入退所記録)</h2>
+                    </div>
+
+                <div id="food-distribution-screen" class="screen flex flex-col h-full">
+                    <h2 class="text-2xl font-bold mb-6 text-yellow-400">炊き出し確認 (2重防止)</h2>
+                    </div>
+
+                <div id="daily-safety-input-screen" class="screen flex flex-col h-full">
+                    <h2 class="text-2xl font-bold mb-6 text-green-400">現場状況の構造化報告</h2>
+                    </div>
+
+                <div id="field-chat-screen" class="screen flex flex-col h-full">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-400">現場チャット・レポート</h2>
+                    </div>
+
+            {% endif %} </main>
+
+        <footer class="bg-gray-800 p-3 shadow-inner flex justify-around items-center border-t border-gray-700">
+            {% if session.logged_in %}
+                <button onclick="showScreen('home-screen', '現場操作メニュー')" class="flex flex-col items-center text-gray-400 hover:text-blue-400 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span class="text-xs mt-1">ホーム</span>
+                </button>
+                <button onclick="showScreen('shelter-checkin-screen', '避難所受付')" class="flex flex-col items-center text-gray-400 hover:text-blue-400 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <span class="text-xs mt-1">受付</span>
+                </button>
+
+                <a href="{{ url_for('logout') }}" class="flex flex-col items-center text-gray-400 hover:text-red-400 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h4M16 17l5-5-5-5M21 12H9"></path></svg>
+                    <span class="text-xs mt-1">ログアウト</span>
+                </a>
+            {% else %}
+                <p class="text-gray-500 text-sm">ログインしてください</p>
+            {% endif %}
+        </footer>
+
+    </div>
+
+    <script>
+        // (提供されたJavaScriptをベースに)
+        const screens = document.querySelectorAll('.screen');
+        const screenTitle = document.getElementById('screen-title');
+        const connectionStatus = document.getElementById('connection-status');
+
+        // messageContainer はログインしていないと存在しない可能性があるため、存在チェックを追加
+        const messageContainer = document.getElementById('message-container');
+
+        let currentGroupId = null;
+
+        function showScreen(screenId, titleText) {
+            screens.forEach(screen => {
+                screen.style.display = 'none';
+            });
+            const targetScreen = document.getElementById(screenId);
+            if (targetScreen) {
+                targetScreen.style.display = 'flex';
+                targetScreen.classList.add('flex-1', 'flex-col');
+                screenTitle.textContent = titleText;
+            }
+        }
+
+        // --- (scanQrToJoinGroup, appendSystemMessage, sendStructuredMessage, checkConnection 関数は提供されたものと同じ) ---
+        // (これらの関数はログイン時のみ呼び出される想定のため、エラーハンドリングは省略)
+
+        function scanQrToJoinGroup() {
+            const scannedId = prompt("QRコードをスキャンしました。\nグループIDを入力してください (例: MEDICAL_TEAM_01):");
+            const groupIdDisplay = document.getElementById('current-group-id');
+            if (scannedId && scannedId.trim() !== "") {
+                currentGroupId = scannedId.trim().toUpperCase();
+                groupIdDisplay.textContent = currentGroupId;
+                groupIdDisplay.classList.remove('text-yellow-300');
+                groupIdDisplay.classList.add('text-green-400');
+                appendSystemMessage(`グループ「${currentGroupId}」に接続しました。`);
+            } else if (scannedId !== null) {
+                alert("グループIDが無効です。");
+            }
+        }
+
+        function appendSystemMessage(message) {
+            if (!messageContainer) return; // コンテナがなければ何もしない
+            const newMessageDiv = document.createElement('div');
+            newMessageDiv.className = 'text-center text-xs text-gray-500 my-1';
+            newMessageDiv.textContent = message;
+            messageContainer.appendChild(newMessageDiv);
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+        }
+
+        function sendStructuredMessage() {
+            if (!messageContainer) return; // コンテナがなければ何もしない
+            const inputElement = document.getElementById('chat-input');
+            const typeElement = document.getElementById('report-type');
+            const messageText = inputElement.value.trim();
+            const reportType = typeElement.value;
+            if (messageText === '') { return; }
+            const groupPrefix = currentGroupId ? `[グループ: ${currentGroupId}] ` : '';
+            const fullMessage = `【${reportType}】 ${groupPrefix}${messageText}`;
+            const newMessageDiv = document.createElement('div');
+            newMessageDiv.className = 'text-sm text-right';
+            const messageP = document.createElement('p');
+            messageP.className = 'bg-gray-600 p-2 rounded-t-lg rounded-bl-lg inline-block text-white max-w-xs';
+            messageP.textContent = fullMessage;
+            newMessageDiv.appendChild(messageP);
+            messageContainer.appendChild(newMessageDiv);
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+            inputElement.value = '';
+            console.log('--- 構造化データ送信シミュレーション (QRグループ対応) ---');
+            console.log('送信者ID:', '{{ session.user_id | default("不明") }}'); // ★変更点: セッションからIDを注入
+            console.log('グループID:', currentGroupId || '全体/本部');
+            console.log('種別:', reportType);
+            console.log('メッセージ:', messageText);
+            console.log('日時:', new Date().toISOString());
+            console.log('---------------------------------------------------------');
+        }
+
+        function checkConnection() {
+            const isOnline = Math.random() > 0.3; // ダミー判定
+            if (isOnline) {
+                connectionStatus.textContent = 'オンライン';
+                connectionStatus.classList.remove('bg-red-500');
+                connectionStatus.classList.add('bg-green-500');
+            } else {
+                connectionStatus.textContent = 'オフライン';
+                connectionStatus.classList.remove('bg-green-500');
+                connectionStatus.classList.add('bg-red-500');
+            }
+        }
+
+        // ★変更点: 初期画面の設定をFlaskのセッション情報(logged_in)を使って動的に切り替える
+        window.onload = function() {
+            {% if session.logged_in %}
+                // ログイン済み (True) の場合
+                showScreen('home-screen', '現場操作メニュー');
+            {% else %}
+                // 未ログイン (False または None) の場合
+                showScreen('login-screen', '現場職員ログイン');
+            {% endif %}
+
+            checkConnection();
+            setInterval(checkConnection, 10000); // 10秒ごとに接続チェック
+        };
+    </script>
+</body>
+</html>
