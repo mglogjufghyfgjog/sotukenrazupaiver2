@@ -12,7 +12,7 @@
         .action-button { padding: 1.5rem; font-size: 1.25rem; font-weight: bold; border-radius: 0.75rem; transition: all 0.2s; box-shadow: 0 4px #4b5563; }
         .action-button:active { box-shadow: 0 0 #4b5563; transform: translateY(4px); }
 
-        /* Flaskのflashメッセージ（エラー表示）用のスタイル */
+        /* ★変更点: Flaskのflashメッセージ（エラー表示）用のスタイルを追加 */
         .flask-flash {
             background-color: #7f1d1d; /* 暗い赤色 */
             color: #fef2f2; /* 明るい赤系の白 */
@@ -104,7 +104,35 @@
 
                 <div id="food-distribution-screen" class="screen flex flex-col h-full">
                     <h2 class="text-2xl font-bold mb-6 text-yellow-400">炊き出し確認 (2重防止)</h2>
+                    <div class="bg-gray-700 p-6 rounded-lg shadow-xl flex-1">
+                        <p class="text-lg mb-4 text-gray-300">避難者のQRコードをスキャンし、配布可否を判定します。</p>
+
+                        <div class="mb-6">
+                            <label class="block text-xl font-semibold mb-2 text-yellow-300">配布物資 (必須)</label>
+                            <select class="mt-1 p-3 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-yellow-400">
+                                <option value="meal_a">昼食：温かい食事 (1食目)</option>
+                                <option value="meal_b">夕食：パン・おにぎり (2食目)</option>
+                                <option value="water_3l">飲料水 (3Lボトル)</option>
+                            </select>
+                        </div>
+
+                        <div class="bg-gray-800 p-6 h-40 rounded-lg flex items-center justify-center text-gray-500 mb-6 border-4 border-dashed border-yellow-500">
+                            カメラ起動 & QRコード読み取りエリア
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-gray-300">避難者ID (自動入力)：</label>
+                            <input type="text" value="[スキャン結果ID]" readonly class="mt-1 p-3 w-full rounded-md bg-gray-600 text-yellow-300 border-none">
+                        </div>
+
+                        <button class="w-full action-button bg-green-500 text-white hover:bg-green-600 mt-4">判定を実行</button>
+
+                        <div class="mt-6 p-4 text-center rounded-lg bg-gray-900 border border-gray-600">
+                            <p class="text-2xl font-bold text-red-400">【判定結果】配布可能です</p>
+                            <p class="text-sm text-gray-400">（最終受け取り時刻：なし）</p>
+                        </div>
                     </div>
+                </div>
 
                 <div id="daily-safety-input-screen" class="screen flex flex-col h-full">
                     <h2 class="text-2xl font-bold mb-6 text-green-400">現場状況の構造化報告</h2>

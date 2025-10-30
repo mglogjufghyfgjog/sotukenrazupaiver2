@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a6d0d2c5-533e-4e61-ba7f-d0ee7978faf1" name="変更" comment="サンプルコードを追加しました">
+    <list default="true" id="a6d0d2c5-533e-4e61-ba7f-d0ee7978faf1" name="変更" comment="安否状況報告画面を追加しました">
       <change beforePath="$PROJECT_DIR$/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -90,7 +90,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1761789092079</updated>
-      <workItem from="1761789093085" duration="3175000" />
+      <workItem from="1761789093085" duration="3602000" />
     </task>
     <task id="LOCAL-00001" summary="画面の作成を作成をしました">
       <option name="closed" value="true" />
@@ -124,7 +124,15 @@
       <option name="project" value="LOCAL" />
       <updated>1761791648168</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="安否状況報告画面を追加しました">
+      <option name="closed" value="true" />
+      <created>1761792331478</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1761792331478</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -144,9 +152,10 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="画面の作成を作成をしました" />
     <MESSAGE value="サンプルコードを追加しました" />
-    <option name="LAST_COMMIT_MESSAGE" value="サンプルコードを追加しました" />
+    <MESSAGE value="安否状況報告画面を追加しました" />
+    <option name="LAST_COMMIT_MESSAGE" value="安否状況報告画面を追加しました" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/sotukenrazupaiver2$sotukenrazupaiver2.coverage" NAME="sotukenrazupaiver2 のカバレッジ結果" MODIFIED="1761792200264" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/sotukenrazupaiver2$sotukenrazupaiver2.coverage" NAME="sotukenrazupaiver2 のカバレッジ結果" MODIFIED="1761792671688" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
   </component>
 </project>
