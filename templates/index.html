@@ -164,7 +164,45 @@
 
                 <div id="field-chat-screen" class="screen flex flex-col h-full">
                     <h2 class="text-2xl font-bold mb-4 text-gray-400">現場チャット・レポート</h2>
+
+                    <div class="bg-gray-700 p-4 rounded-lg mb-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-lg font-semibold text-white">現在のグループ:</span>
+                            <span id="current-group-id" class="text-lg font-bold text-yellow-300">[グループ未参加]</span>
+                        </div>
+                        <button onclick="scanQrToJoinGroup()" class="w-full bg-orange-500 text-white p-2 rounded-lg hover:bg-orange-600 transition-colors font-semibold">
+                            <span class="inline-block align-middle mr-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"/></svg>
+                            </span>
+                            QRコードでグループに参加/作成
+                        </button>
                     </div>
+
+                    <div id="message-container" class="flex-1 bg-gray-800 p-4 rounded-lg shadow-inner mb-4 overflow-y-auto border border-gray-700 space-y-2">
+                        <div class="text-sm">
+                            <p class="bg-blue-800 p-2 rounded-t-lg rounded-br-lg inline-block text-white max-w-xs">【指令】水物資を優先配布せよ</p>
+                        </div>
+                        <div class="text-sm text-right">
+                            <p class="bg-gray-600 p-2 rounded-t-lg rounded-bl-lg inline-block text-white max-w-xs">【状況報告】現在避難者数 85名です。</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-700 p-4 rounded-lg">
+                        <label class="block text-lg font-semibold mb-2 text-gray-300">報告の種別 (必須)</label>
+                        <select id="report-type" class="p-2 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-blue-400 mb-3">
+                            <option value="一般連絡">一般連絡</option>
+                            <option value="現場状況報告">現場状況報告</option>
+                            <option value="支援要請">支援要請</option>
+                            <option value="緊急連絡">緊急連絡</option>
+                        </select>
+
+                        <div class="flex">
+                            <input type="text" id="chat-input" class="flex-1 p-3 border rounded-l-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-blue-400" placeholder="メッセージを入力...">
+                            <button onclick="sendStructuredMessage()" class="bg-blue-500 text-white p-3 rounded-r-md hover:bg-blue-600 transition-colors action-button">送信</button>
+                        </div>
+                        <p class="text-sm text-gray-400 mt-2">※メッセージはグループ (あれば) と本部に送信されます。</p>
+                    </div>
+                </div>
 
             {% endif %} </main>
 
@@ -197,7 +235,9 @@
         const connectionStatus = document.getElementById('connection-status');
 
         // messageContainer はログインしていないと存在しない可能性があるため、存在チェックを追加
-        const messageContainer = document.getElementById('message-container');
+        // ★修正点: document.getElementById('message-container') はグローバルスコープではなく、
+        // 必要な関数 (appendSystemMessage, sendStructuredMessage) の内部で都度取得するようにします。
+        // (ログイン前に実行されると null になるため)
 
         let currentGroupId = null;
 
@@ -231,6 +271,8 @@
         }
 
         function appendSystemMessage(message) {
+            // ★修正: 関数呼び出し時に message-container を取得
+            const messageContainer = document.getElementById('message-container');
             if (!messageContainer) return; // コンテナがなければ何もしない
             const newMessageDiv = document.createElement('div');
             newMessageDiv.className = 'text-center text-xs text-gray-500 my-1';
@@ -240,6 +282,8 @@
         }
 
         function sendStructuredMessage() {
+            // ★修正: 関数呼び出し時に message-container を取得
+            const messageContainer = document.getElementById('message-container');
             if (!messageContainer) return; // コンテナがなければ何もしない
             const inputElement = document.getElementById('chat-input');
             const typeElement = document.getElementById('report-type');
