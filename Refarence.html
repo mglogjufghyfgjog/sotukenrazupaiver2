@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPi 現場デバイス操作画面</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* デフォルトで全ての画面を非表示に */
+        .screen {
+            display: none;
+        }
+        /* RPiデバイスらしいシンプルで高コントラストなデザイン */
+        .rpi-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #1f2937; /* Dark background */
+            color: #f3f4f6; /* Light text */
+            font-family: 'Inter', sans-serif;
+        }
+        .action-button {
+            padding: 1.5rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border-radius: 0.75rem;
+            transition: all 0.2s;
+            box-shadow: 0 4px #4b5563;
+        }
+        .action-button:active {
+            box-shadow: 0 0 #4b5563;
+            transform: translateY(4px);
+        }
+    </style>
+</head>
+<body class="bg-gray-800">
+
+    <div class="rpi-container">
+
+        <!-- RPi共通ヘッダー (避難所名などを表示) -->
+        <header class="bg-blue-700 text-white p-4 shadow-lg flex justify-between items-center">
+            <h1 id="screen-title" class="text-xl font-bold">現場操作メニュー</h1>
+            <span class="text-sm bg-green-500 px-2 py-1 rounded-full" id="connection-status">オフライン</span>
+        </header>
+
+        <!-- メインコンテンツエリア -->
+        <main class="flex-1 overflow-y-auto p-4 flex flex-col">
+
+            <!-- ログイン画面 -->
+            <div id="login-screen" class="screen flex flex-col items-center justify-center h-full">
+                <div class="bg-gray-700 p-8 rounded-lg shadow-xl w-full max-w-sm">
+                    <h2 class="text-2xl font-bold mb-6 text-center text-blue-400">現場職員ログイン</h2>
+                    <p class="text-sm text-gray-400 mb-4">このデバイスの操作には認証が必要です。</p>
+                    <div class="mb-4">
+                        <label class="block text-gray-300">職員ID：</label>
+                        <input type="text" class="mt-1 p-3 w-full border border-gray-600 rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-blue-400">
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-300">パスワード：</label>
+                        <input type="password" class="mt-1 p-3 w-full border border-gray-600 rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-blue-400">
+                    </div>
+                    <button onclick="showScreen('home-screen', '現場操作メニュー')" class="w-full action-button bg-blue-500 text-white hover:bg-blue-600">ログイン</button>
+                </div>
+            </div>
+
+            <!-- RPi ホーム画面 (現場操作メニュー) -->
+            <div id="home-screen" class="screen grid grid-cols-1 md:grid-cols-2 gap-6 place-content-center h-full">
+                <button onclick="showScreen('shelter-checkin-screen', '避難所受付')" class="action-button bg-indigo-500 text-white hover:bg-indigo-600">
+                    避難所受付 <br><span class="text-sm font-normal">(QR: 入退所・人数確認)</span>
+                </button>
+                <button onclick="showScreen('food-distribution-screen', '炊き出し確認')" class="action-button bg-yellow-500 text-white hover:bg-yellow-600">
+                    炊き出し確認 <br><span class="text-sm font-normal">(QR: 2重受け取り防止)</span>
+                </button>
+                <button onclick="showScreen('daily-safety-input-screen', '安否・状況報告')" class="action-button bg-green-500 text-white hover:bg-green-600">
+                    安否・状況報告 <br><span class="text-sm font-normal">(現場状況の構造化入力)</span>
+                </button>
+                <button onclick="showScreen('field-chat-screen', '現場チャット')" class="action-button bg-gray-500 text-white hover:bg-gray-600">
+                    現場チャット <br><span class="text-sm font-normal">(構造化レポート送信)</span>
+                </button>
+            </div>
+
+            <!-- 避難所受付画面 (構造化入力) -->
+            <div id="shelter-checkin-screen" class="screen flex flex-col h-full">
+                <h2 class="text-2xl font-bold mb-6 text-indigo-400">避難所受付 (入退所記録)</h2>
+                <div class="bg-gray-700 p-6 rounded-lg shadow-xl flex-1">
+                    <p class="text-lg mb-4 text-gray-300">避難者証のQRコードをスキャンしてください。</p>
+
+                    <!-- 必須項目: 入退所種別 -->
+                    <div class="mb-6">
+                        <label class="block text-xl font-semibold mb-2 text-indigo-300">入退所種別 (必須)</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <button class="action-button bg-green-600 hover:bg-green-700 text-white">入所 (チェックイン)</button>
+                            <button class="action-button bg-red-600 hover:bg-red-700 text-white">退所 (チェックアウト)</button>
+                        </div>
+                    </div>
+
+                    <!-- 必須項目: QRコードスキャンエリア -->
+                    <div class="bg-gray-800 p-6 h-40 rounded-lg flex items-center justify-center text-gray-500 mb-6 border-4 border-dashed border-indigo-500">
+                        カメラ起動 & QRコード読み取りエリア
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-300">避難者ID (自動入力)：</label>
+                        <input type="text" value="[スキャン結果ID]" readonly class="mt-1 p-3 w-full rounded-md bg-gray-600 text-yellow-300 border-none">
+                    </div>
+
+                    <button class="w-full action-button bg-blue-500 text-white hover:bg-blue-600 mt-4">記録を一時保存 (サーバー同期)</button>
+                </div>
+            </div>
+
+            <!-- 炊き出し確認画面 (構造化入力) -->
+            <div id="food-distribution-screen" class="screen flex flex-col h-full">
+                <h2 class="text-2xl font-bold mb-6 text-yellow-400">炊き出し確認 (2重防止)</h2>
+                <div class="bg-gray-700 p-6 rounded-lg shadow-xl flex-1">
+                    <p class="text-lg mb-4 text-gray-300">避難者のQRコードをスキャンし、配布可否を判定します。</p>
+
+                    <!-- 必須項目: 配布物資ID/種類 -->
+                    <div class="mb-6">
+                        <label class="block text-xl font-semibold mb-2 text-yellow-300">配布物資 (必須)</label>
+                        <select class="mt-1 p-3 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-yellow-400">
+                            <option value="meal_a">昼食：温かい食事 (1食目)</option>
+                            <option value="meal_b">夕食：パン・おにぎり (2食目)</option>
+                            <option value="water_3l">飲料水 (3Lボトル)</option>
+                        </select>
+                    </div>
+
+                    <!-- QRスキャンエリア -->
+                    <div class="bg-gray-800 p-6 h-40 rounded-lg flex items-center justify-center text-gray-500 mb-6 border-4 border-dashed border-yellow-500">
+                        カメラ起動 & QRコード読み取りエリア
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-300">避難者ID (自動入力)：</label>
+                        <input type="text" value="[スキャン結果ID]" readonly class="mt-1 p-3 w-full rounded-md bg-gray-600 text-yellow-300 border-none">
+                    </div>
+
+                    <button class="w-full action-button bg-green-500 text-white hover:bg-green-600 mt-4">判定を実行</button>
+
+                    <!-- 判定結果表示エリア -->
+                    <div class="mt-6 p-4 text-center rounded-lg bg-gray-900 border border-gray-600">
+                        <p class="text-2xl font-bold text-red-400">【判定結果】配布可能です</p>
+                        <p class="text-sm text-gray-400">（最終受け取り時刻：なし）</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 安否・状況報告画面 (構造化入力) -->
+            <div id="daily-safety-input-screen" class="screen flex flex-col h-full">
+                <h2 class="text-2xl font-bold mb-6 text-green-400">現場状況の構造化報告</h2>
+                <div class="bg-gray-700 p-6 rounded-lg shadow-xl flex-1">
+                    <p class="text-lg mb-4 text-gray-300">避難所の現状を正確に報告してください。</p>
+
+                    <!-- 必須項目: 人数 -->
+                    <div class="mb-4">
+                        <label class="block text-xl font-semibold mb-2 text-green-300">現在避難者数 (必須)</label>
+                        <input type="number" min="0" placeholder="人数を入力" id="current-evacuees" class="mt-1 p-3 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-green-400">
+                    </div>
+
+                    <!-- 必須項目: 医療ニーズ -->
+                    <div class="mb-4">
+                        <label class="block text-xl font-semibold mb-2 text-green-300">医療・要介護者数 (必須)</label>
+                        <input type="number" min="0" placeholder="人数を入力" id="medical-needs" class="mt-1 p-3 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-green-400">
+                    </div>
+
+                    <!-- 必須項目: 物資残量ステータス -->
+                    <div class="mb-6">
+                        <label class="block text-xl font-semibold mb-2 text-green-300">食料の残量 (必須)</label>
+                        <select id="food-stock" class="mt-1 p-3 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-green-400">
+                            <option value="safe">3日以上持つ</option>
+                            <option value="warning">1日〜3日持つ</option>
+                            <option value="critical">本日分で尽きる</option>
+                        </select>
+                    </div>
+
+                    <button class="w-full action-button bg-blue-500 text-white hover:bg-blue-600 mt-4">状況を送信 (サーバー同期)</button>
+                </div>
+            </div>
+
+            <!-- 現場チャット画面 (構造化レポート送信 + QRグループ機能) -->
+            <div id="field-chat-screen" class="screen flex flex-col h-full">
+                <h2 class="text-2xl font-bold mb-4 text-gray-400">現場チャット・レポート</h2>
+
+                <!-- NEW: グループ情報とQR参加ボタン -->
+                <div class="bg-gray-700 p-4 rounded-lg mb-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-lg font-semibold text-white">現在のグループ:</span>
+                        <span id="current-group-id" class="text-lg font-bold text-yellow-300">[グループ未参加]</span>
+                    </div>
+                    <button onclick="scanQrToJoinGroup()" class="w-full bg-orange-500 text-white p-2 rounded-lg hover:bg-orange-600 transition-colors font-semibold">
+                        <span class="inline-block align-middle mr-2">
+                             <!-- Icon for QR Scan -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"/></svg>
+                        </span>
+                        QRコードでグループに参加/作成
+                    </button>
+                </div>
+
+                <!-- チャットメッセージリスト -->
+                <div id="message-container" class="flex-1 bg-gray-800 p-4 rounded-lg shadow-inner mb-4 overflow-y-auto border border-gray-700 space-y-2">
+                    <!-- 初期メッセージ (本部からの指令を想定) -->
+                    <div class="text-sm">
+                        <p class="bg-blue-800 p-2 rounded-t-lg rounded-br-lg inline-block text-white max-w-xs">【指令】水物資を優先配布せよ</p>
+                    </div>
+                    <div class="text-sm text-right">
+                        <p class="bg-gray-600 p-2 rounded-t-lg rounded-bl-lg inline-block text-white max-w-xs">【状況報告】現在避難者数 85名です。</p>
+                    </div>
+                </div>
+
+                <!-- 構造化チャット入力エリア -->
+                <div class="bg-gray-700 p-4 rounded-lg">
+                    <label class="block text-lg font-semibold mb-2 text-gray-300">報告の種別 (必須)</label>
+                    <select id="report-type" class="p-2 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-blue-400 mb-3">
+                        <option value="一般連絡">一般連絡</option>
+                        <option value="現場状況報告">現場状況報告</option>
+                        <option value="支援要請">支援要請</option>
+                        <option value="緊急連絡">緊急連絡</option>
+                    </select>
+
+                    <div class="flex">
+                        <input type="text" id="chat-input" class="flex-1 p-3 border rounded-l-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-blue-400" placeholder="メッセージを入力...">
+                        <button onclick="sendStructuredMessage()" class="bg-blue-500 text-white p-3 rounded-r-md hover:bg-blue-600 transition-colors action-button">送信</button>
+                    </div>
+                    <p class="text-sm text-gray-400 mt-2">※メッセージはグループ (あれば) と本部に送信されます。</p>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- RPi共通フッター -->
+        <footer class="bg-gray-800 p-3 shadow-inner flex justify-around items-center border-t border-gray-700">
+            <button onclick="showScreen('home-screen', '現場操作メニュー')" class="flex flex-col items-center text-gray-400 hover:text-blue-400 transition-colors">
+                 <!-- Icon for Home -->
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <span class="text-xs mt-1">ホーム</span>
+            </button>
+            <button onclick="showScreen('shelter-checkin-screen', '避難所受付')" class="flex flex-col items-center text-gray-400 hover:text-blue-400 transition-colors">
+                <!-- Icon for Checkin -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <span class="text-xs mt-1">受付</span>
+            </button>
+            <button onclick="showScreen('login-screen', '現場職員ログイン')" class="flex flex-col items-center text-gray-400 hover:text-red-400 transition-colors">
+                <!-- Icon for Logout -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h4M16 17l5-5-5-5M21 12H9"></path></svg>
+                <span class="text-xs mt-1">ログアウト</span>
+            </button>
+        </footer>
+
+    </div>
+
+    <script>
+        const screens = document.querySelectorAll('.screen');
+        const screenTitle = document.getElementById('screen-title');
+        const connectionStatus = document.getElementById('connection-status');
+        const messageContainer = document.getElementById('message-container');
+
+        // NEW: グローバルな現在のグループIDを保持
+        let currentGroupId = null;
+
+        // 指定された画面を表示し、タイトルを変更する関数
+        function showScreen(screenId, titleText) {
+            screens.forEach(screen => {
+                screen.style.display = 'none';
+            });
+            const targetScreen = document.getElementById(screenId);
+            if (targetScreen) {
+                // RPiのUIは縦いっぱいに広がるように 'flex' を適用
+                targetScreen.style.display = 'flex';
+                targetScreen.classList.add('flex-1', 'flex-col');
+                screenTitle.textContent = titleText;
+            }
+        }
+
+        // NEW: QRコードスキャンによるグループ参加/作成をシミュレートする関数
+        function scanQrToJoinGroup() {
+            // 実際にはここでカメラが起動し、QRコードを読み取る
+            // ここでは簡易的な入力ダイアログを使用
+            const scannedId = prompt("QRコードをスキャンしました。\nグループIDを入力してください (例: MEDICAL_TEAM_01):");
+            const groupIdDisplay = document.getElementById('current-group-id');
+
+            if (scannedId && scannedId.trim() !== "") {
+                currentGroupId = scannedId.trim().toUpperCase();
+                groupIdDisplay.textContent = currentGroupId;
+                groupIdDisplay.classList.remove('text-yellow-300');
+                groupIdDisplay.classList.add('text-green-400');
+                // 成功メッセージをチャットに表示（シミュレーション）
+                appendSystemMessage(`グループ「${currentGroupId}」に接続しました。`);
+
+            } else if (scannedId !== null) {
+                // キャンセルされた場合以外で、IDが空だった場合
+                // グループを解除する選択肢として機能させることも可能だが、ここではエラー表示とする
+                alert("グループIDが無効です。");
+            }
+        }
+
+        // システムメッセージをチャットに追加するヘルパー関数
+        function appendSystemMessage(message) {
+            const newMessageDiv = document.createElement('div');
+            newMessageDiv.className = 'text-center text-xs text-gray-500 my-1';
+            newMessageDiv.textContent = message;
+            messageContainer.appendChild(newMessageDiv);
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+        }
+
+
+        // 構造化チャットメッセージを送信し、画面に追加する関数
+        function sendStructuredMessage() {
+            const inputElement = document.getElementById('chat-input');
+            const typeElement = document.getElementById('report-type');
+
+            const messageText = inputElement.value.trim();
+            const reportType = typeElement.value;
+
+            if (messageText === '') {
+                // メッセージがない場合は送信しない
+                return;
+            }
+
+            // 1. 構造化されたメッセージを作成
+            const groupPrefix = currentGroupId ? `[グループ: ${currentGroupId}] ` : '';
+            const fullMessage = `【${reportType}】 ${groupPrefix}${messageText}`;
+
+            // 2. メッセージ要素を作成し、チャット画面に追加
+            const newMessageDiv = document.createElement('div');
+            newMessageDiv.className = 'text-sm text-right';
+
+            const messageP = document.createElement('p');
+            // 現場職員からのメッセージを強調するため、明るめのグレーを使用
+            messageP.className = 'bg-gray-600 p-2 rounded-t-lg rounded-bl-lg inline-block text-white max-w-xs';
+            messageP.textContent = fullMessage;
+
+            newMessageDiv.appendChild(messageP);
+            messageContainer.appendChild(newMessageDiv);
+
+            // 3. スクロールを最下部に移動
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+
+            // 4. 入力フィールドをクリア (実際にはここでサーバーへデータを送信)
+            inputElement.value = '';
+
+            // ログ出力 (サーバーに送信される構造化データをシミュレート)
+            console.log('--- 構造化データ送信シミュレーション (QRグループ対応) ---');
+            console.log('送信者ID: [職員ID]');
+            console.log('グループID:', currentGroupId || '全体/本部');
+            console.log('種別:', reportType);
+            console.log('メッセージ:', messageText);
+            console.log('日時:', new Date().toISOString());
+            console.log('---------------------------------------------------------');
+        }
+
+        // 接続ステータスのダミーチェック（RPiで重要な機能）
+        function checkConnection() {
+            // 実際にはサーバーへのpingなどを行う
+            const isOnline = Math.random() > 0.3; // ダミー判定
+            if (isOnline) {
+                connectionStatus.textContent = 'オンライン';
+                connectionStatus.classList.remove('bg-red-500');
+                connectionStatus.classList.add('bg-green-500');
+            } else {
+                connectionStatus.textContent = 'オフライン';
+                connectionStatus.classList.remove('bg-green-500');
+                connectionStatus.classList.add('bg-red-500');
+            }
+        }
+
+        // 初期画面を設定
+        window.onload = function() {
+            showScreen('login-screen', '現場職員ログイン');
+            checkConnection();
+            setInterval(checkConnection, 10000); // 10秒ごとに接続チェック
+        };
+    </script>
+</body>
+</html>
