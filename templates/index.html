@@ -1,341 +1,187 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPi 現場デバイス操作画面</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* (提供されたCSSと同じ...省略) */
-        .screen { display: none; }
-        .rpi-container { display: flex; flex-direction: column; height: 100vh; background-color: #1f2937; color: #f3f4f6; font-family: 'Inter', sans-serif; }
-        .action-button { padding: 1.5rem; font-size: 1.25rem; font-weight: bold; border-radius: 0.75rem; transition: all 0.2s; box-shadow: 0 4px #4b5563; }
-        .action-button:active { box-shadow: 0 0 #4b5563; transform: translateY(4px); }
+<!DOCTYPE html> <html lang="ja"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>RPi 現場デバイス操作画面</title> <script src="https://cdn.tailwindcss.com"></script> <style> /* (提供されたCSSと同じ...省略) */
+        .screen { display: none; } /* .screen クラスを持つ要素を初期状態では非表示にします */
+        .rpi-container { display: flex; flex-direction: column; height: 100vh; background-color: #1f2937; color: #f3f4f6; font-family: 'Inter', sans-serif; } /* 全体のコンテナ（RPi風デザイン）のスタイルです */
+        .action-button { padding: 1.5rem; font-size: 1.25rem; font-weight: bold; border-radius: 0.75rem; transition: all 0.2s; box-shadow: 0 4px #4b5563; } /* アクションボタンの共通スタイルです */
+        .action-button:active { box-shadow: 0 0 #4b5563; transform: translateY(4px); } /* ボタンが押された時のスタイルです */
 
         /* ★変更点: Flaskのflashメッセージ（エラー表示）用のスタイルを追加 */
-        .flask-flash {
-            background-color: #7f1d1d; /* 暗い赤色 */
-            color: #fef2f2; /* 明るい赤系の白 */
-            padding: 1rem;
-            border-radius: 0.5rem;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 1rem;
+        .flask-flash { /* Flaskのflash()で設定されたメッセージを表示する領域のスタイルです */
+            background-color: #7f1d1d; /* 暗い赤色の背景 */
+            color: #fef2f2; /* 明るい赤系の文字色 */
+            padding: 1rem; /* 内側の余白 */
+            border-radius: 0.5rem; /* 角丸 */
+            font-weight: bold; /* 太字 */
+            text-align: center; /* 中央揃え */
+            margin-bottom: 1rem; /* 下側の余白 */
         }
-    </style>
-</head>
-<body class="bg-gray-800">
-
-    <div class="rpi-container">
-
-        <header class="bg-blue-700 text-white p-4 shadow-lg flex justify-between items-center">
-            <h1 id="screen-title" class="text-xl font-bold">現場操作メニュー</h1>
-            {% if session.logged_in %}
-                <span class="text-sm">ようこそ, **{{ session.user_id }}** さん</span>
-            {% endif %}
-            <span class="text-sm bg-green-500 px-2 py-1 rounded-full" id="connection-status">オフライン</span>
-        </header>
-
-        <main class="flex-1 overflow-y-auto p-4 flex flex-col">
-
-            <form id="login-screen" action="{{ url_for('login') }}" method="POST" class="screen flex flex-col items-center justify-center h-full">
-                <div class="bg-gray-700 p-8 rounded-lg shadow-xl w-full max-w-sm">
-                    <h2 class="text-2xl font-bold mb-6 text-center text-blue-400">現場職員ログイン</h2>
-
-                    {% with messages = get_flashed_messages() %}
-                        {% if messages %}
-                            <div class="flask-flash">
-                                {{ messages[0] }} </div>
-                        {% endif %}
-                    {% endwith %}
-
-                    <p class="text-sm text-gray-400 mb-4">このデバイスの操作には認証が必要です。</p>
-                    <div class="mb-4">
-                        <label class="block text-gray-300">職員ID：</label>
-                        <input type="text" name="user_id" class="mt-1 p-3 w-full border border-gray-600 rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-blue-400" value="admin"> </div>
-                    <div class="mb-6">
-                        <label class="block text-gray-300">パスワード：</label>
-                        <input type="password" name="password" class="mt-1 p-3 w-full border border-gray-600 rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-blue-400" value="pass123"> </div>
-                    <button type="submit" class="w-full action-button bg-blue-500 text-white hover:bg-blue-600">ログイン</button>
-                </div>
-            </form> {% if session.logged_in %}
-                <div id="home-screen" class="screen grid grid-cols-1 md:grid-cols-2 gap-6 place-content-center h-full">
-                    <button onclick="showScreen('shelter-checkin-screen', '避難所受付')" class="action-button bg-indigo-500 text-white hover:bg-indigo-600">
-                        避難所受付 <br><span class="text-sm font-normal">(QR: 入退所・人数確認)</span>
+    </style> </head> <body class="bg-gray-800"> <div class="rpi-container"> <header class="bg-blue-700 text-white p-4 shadow-lg flex justify-between items-center"> <h1 id="screen-title" class="text-xl font-bold">現場操作メニュー</h1> {% if session.logged_in %} <span class="text-sm">ようこそ, **{{ session.user_id }}** さん</span> {% endif %} <span class="text-sm bg-green-500 px-2 py-1 rounded-full" id="connection-status">オフライン</span> </header> <main class="flex-1 overflow-y-auto p-4 flex flex-col"> <form id="login-screen" action="{{ url_for('login') }}" method="POST" class="screen flex flex-col items-center justify-center h-full"> <div class="bg-gray-700 p-8 rounded-lg shadow-xl w-full max-w-sm"> <h2 class="text-2xl font-bold mb-6 text-center text-blue-400">現場職員ログイン</h2> {% with messages = get_flashed_messages() %} {% if messages %} <div class="flask-flash"> {{ messages[0] }} </div> {% endif %} {% endwith %} <p class="text-sm text-gray-400 mb-4">このデバイスの操作には認証が必要です。</p> <div class="mb-4"> <label class="block text-gray-300">職員ID：</label> <input type="text" name="user_id" class="mt-1 p-3 w-full border border-gray-600 rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-blue-400" value="admin"> </div> <div class="mb-6"> <label class="block text-gray-300">パスワード：</label> <input type="password" name="password" class="mt-1 p-3 w-full border border-gray-600 rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-blue-400" value="pass123"> </div> <button type="submit" class="w-full action-button bg-blue-500 text-white hover:bg-blue-600">ログイン</button> </div> </form> {% if session.logged_in %} <div id="home-screen" class="screen grid grid-cols-1 md:grid-cols-2 gap-6 place-content-center h-full"> <button onclick="showScreen('shelter-checkin-screen', '避難所受付')" class="action-button bg-indigo-500 text-white hover:bg-indigo-600"> 避難所受付 <br><span class="text-sm font-normal">(QR: 入退所・人数確認)</span>
                     </button>
-                    <button onclick="showScreen('food-distribution-screen', '炊き出し確認')" class="action-button bg-yellow-500 text-white hover:bg-yellow-600">
-                        炊き出し確認 <br><span class="text-sm font-normal">(QR: 2重受け取り防止)</span>
+                    <button onclick="showScreen('food-distribution-screen', '炊き出し確認')" class="action-button bg-yellow-500 text-white hover:bg-yellow-600"> 炊き出し確認 <br><span class="text-sm font-normal">(QR: 2重受け取り防止)</span>
                     </button>
-                    <button onclick="showScreen('daily-safety-input-screen', '安否・状況報告')" class="action-button bg-green-500 text-white hover:bg-green-600">
-                        安否・状況報告 <br><span class="text-sm font-normal">(現場状況の構造化入力)</span>
+                    <button onclick="showScreen('daily-safety-input-screen', '安否・状況報告')" class="action-button bg-green-500 text-white hover:bg-green-600"> 安否・状況報告 <br><span class="text-sm font-normal">(現場状況の構造化入力)</span>
                     </button>
-                    <button onclick="showScreen('field-chat-screen', '現場チャット')" class="action-button bg-gray-500 text-white hover:bg-gray-600">
-                        現場チャット <br><span class="text-sm font-normal">(構造化レポート送信)</span>
+                    <button onclick="showScreen('field-chat-screen', '現場チャット')" class="action-button bg-gray-500 text-white hover:bg-gray-600"> 現場チャット <br><span class="text-sm font-normal">(構造化レポート送信)</span>
                     </button>
-                </div>
-            {% endif %}
-
-            {% if session.logged_in %}
-                <div id="shelter-checkin-screen" class="screen flex flex-col h-full">
-                    <h2 class="text-2xl font-bold mb-6 text-indigo-400">避難所受付 (入退所記録)</h2>
-                    <div class="bg-gray-700 p-6 rounded-lg shadow-xl flex-1">
-                        <p class="text-lg mb-4 text-gray-300">避難者証のQRコードをスキャンしてください。</p>
-
-                        <div class="mb-6">
-                            <label class="block text-xl font-semibold mb-2 text-indigo-300">入退所種別 (必須)</label>
-                            <div class="grid grid-cols-2 gap-4">
-                                <button class="action-button bg-green-600 hover:bg-green-700 text-white">入所 (チェックイン)</button>
-                                <button class="action-button bg-red-600 hover:bg-red-700 text-white">退所 (チェックアウト)</button>
-                            </div>
+                </div> {% endif %} {% if session.logged_in %} <div id="shelter-checkin-screen" class="screen flex flex-col h-full"> <h2 class="text-2xl font-bold mb-6 text-indigo-400">避難所受付 (入退所記録)</h2> <div class="bg-gray-700 p-6 rounded-lg shadow-xl flex-1"> <p class="text-lg mb-4 text-gray-300">避難者証のQRコードをスキャンしてください。</p> <div class="mb-6"> <label class="block text-xl font-semibold mb-2 text-indigo-300">入退所種別 (必須)</label> <div class="grid grid-cols-2 gap-4"> <button class="action-button bg-green-600 hover:bg-green-700 text-white">入所 (チェックイン)</button> <button class="action-button bg-red-600 hover:bg-red-700 text-white">退所 (チェックアウト)</button> </div>
                         </div>
 
-                        <div class="bg-gray-800 p-6 h-40 rounded-lg flex items-center justify-center text-gray-500 mb-6 border-4 border-dashed border-indigo-500">
-                            カメラ起動 & QRコード読み取りエリア
+                        <div class="bg-gray-800 p-6 h-40 rounded-lg flex items-center justify-center text-gray-500 mb-6 border-4 border-dashed border-indigo-500"> カメラ起動 & QRコード読み取りエリア
                         </div>
 
-                        <div class="mb-4">
-                            <label class="block text-gray-300">避難者ID (自動入力)：</label>
-                            <input type="text" value="[スキャン結果ID]" readonly class="mt-1 p-3 w-full rounded-md bg-gray-600 text-yellow-300 border-none">
+                        <div class="mb-4"> <label class="block text-gray-300">避難者ID (自動入力)：</label> <input type="text" value="[スキャン結果ID]" readonly class="mt-1 p-3 w-full rounded-md bg-gray-600 text-yellow-300 border-none"> </div>
+
+                        <button class="w-full action-button bg-blue-500 text-white hover:bg-blue-600 mt-4">記録を一時保存 (サーバー同期)</button> </div> </div> <div id="food-distribution-screen" class="screen flex flex-col h-full"> <h2 class="text-2xl font-bold mb-6 text-yellow-400">炊き出し確認 (2重防止)</h2> <div class="bg-gray-700 p-6 rounded-lg shadow-xl flex-1"> <p class="text-lg mb-4 text-gray-300">避難者のQRコードをスキャンし、配布可否を判定します。</p> <div class="mb-6"> <label class="block text-xl font-semibold mb-2 text-yellow-300">配布物資 (必須)</label> <select class="mt-1 p-3 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-yellow-400"> <option value="meal_a">昼食：温かい食事 (1食目)</option> <option value="meal_b">夕食：パン・おにぎり (2食目)</option> <option value="water_3l">飲料水 (3Lボトル)</option> </select>
                         </div>
 
-                        <button class="w-full action-button bg-blue-500 text-white hover:bg-blue-600 mt-4">記録を一時保存 (サーバー同期)</button>
-                    </div>
-                </div>
-
-                <div id="food-distribution-screen" class="screen flex flex-col h-full">
-                    <h2 class="text-2xl font-bold mb-6 text-yellow-400">炊き出し確認 (2重防止)</h2>
-                    <div class="bg-gray-700 p-6 rounded-lg shadow-xl flex-1">
-                        <p class="text-lg mb-4 text-gray-300">避難者のQRコードをスキャンし、配布可否を判定します。</p>
-
-                        <div class="mb-6">
-                            <label class="block text-xl font-semibold mb-2 text-yellow-300">配布物資 (必須)</label>
-                            <select class="mt-1 p-3 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-yellow-400">
-                                <option value="meal_a">昼食：温かい食事 (1食目)</option>
-                                <option value="meal_b">夕食：パン・おにぎり (2食目)</option>
-                                <option value="water_3l">飲料水 (3Lボトル)</option>
-                            </select>
+                        <div class="bg-gray-800 p-6 h-40 rounded-lg flex items-center justify-center text-gray-500 mb-6 border-4 border-dashed border-yellow-500"> カメラ起動 & QRコード読み取りエリア
                         </div>
 
-                        <div class="bg-gray-800 p-6 h-40 rounded-lg flex items-center justify-center text-gray-500 mb-6 border-4 border-dashed border-yellow-500">
-                            カメラ起動 & QRコード読み取りエリア
-                        </div>
+                        <div class="mb-4"> <label class="block text-gray-300">避難者ID (自動入力)：</label> <input type="text" value="[スキャン結果ID]" readonly class="mt-1 p-3 w-full rounded-md bg-gray-600 text-yellow-300 border-none"> </div>
 
-                        <div class="mb-4">
-                            <label class="block text-gray-300">避難者ID (自動入力)：</label>
-                            <input type="text" value="[スキャン結果ID]" readonly class="mt-1 p-3 w-full rounded-md bg-gray-600 text-yellow-300 border-none">
-                        </div>
-
-                        <button class="w-full action-button bg-green-500 text-white hover:bg-green-600 mt-4">判定を実行</button>
-
-                        <div class="mt-6 p-4 text-center rounded-lg bg-gray-900 border border-gray-600">
-                            <p class="text-2xl font-bold text-red-400">【判定結果】配布可能です</p>
+                        <button class="w-full action-button bg-green-500 text-white hover:bg-green-600 mt-4">判定を実行</button> <div class="mt-6 p-4 text-center rounded-lg bg-gray-900 border border-gray-600"> <p class="text-2xl font-bold text-red-400">【判定結果】配布可能です</p>
                             <p class="text-sm text-gray-400">（最終受け取り時刻：なし）</p>
                         </div>
-                    </div>
-                </div>
+                    </div> </div> <div id="daily-safety-input-screen" class="screen flex flex-col h-full"> <h2 class="text-2xl font-bold mb-6 text-green-400">現場状況の構造化報告</h2> <div class="bg-gray-700 p-6 rounded-lg shadow-xl flex-1"> <p class="text-lg mb-4 text-gray-300">避難所の現状を正確に報告してください。</p> <div class="mb-4"> <label class="block text-xl font-semibold mb-2 text-green-300">現在避難者数 (必須)</label> <input type="number" min="0" placeholder="人数を入力" id="current-evacuees" class="mt-1 p-3 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-green-400"> </div>
 
-                <div id="daily-safety-input-screen" class="screen flex flex-col h-full">
-                    <h2 class="text-2xl font-bold mb-6 text-green-400">現場状況の構造化報告</h2>
-                    <div class="bg-gray-700 p-6 rounded-lg shadow-xl flex-1">
-                        <p class="text-lg mb-4 text-gray-300">避難所の現状を正確に報告してください。</p>
+                        <div class="mb-4"> <label class="block text-xl font-semibold mb-2 text-green-300">医療・要介護者数 (必須)</label> <input type="number" min="0" placeholder="人数を入力" id="medical-needs" class="mt-1 p-3 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-green-400"> </div>
 
-                        <div class="mb-4">
-                            <label class="block text-xl font-semibold mb-2 text-green-300">現在避難者数 (必須)</label>
-                            <input type="number" min="0" placeholder="人数を入力" id="current-evacuees" class="mt-1 p-3 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-green-400">
+                        <div class="mb-6"> <label class="block text-xl font-semibold mb-2 text-green-300">食料の残量 (必須)</label> <select id="food-stock" class="mt-1 p-3 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-green-400"> <option value="safe">3日以上持つ</option> <option value="warning">1日〜3日持つ</option> <option value="critical">本日分で尽きる</option> </select>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="block text-xl font-semibold mb-2 text-green-300">医療・要介護者数 (必須)</label>
-                            <input type="number" min="0" placeholder="人数を入力" id="medical-needs" class="mt-1 p-3 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-green-400">
-                        </div>
-
-                        <div class="mb-6">
-                            <label class="block text-xl font-semibold mb-2 text-green-300">食料の残量 (必須)</label>
-                            <select id="food-stock" class="mt-1 p-3 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-green-400">
-                                <option value="safe">3日以上持つ</option>
-                                <option value="warning">1日〜3日持つ</option>
-                                <option value="critical">本日分で尽きる</option>
-                            </select>
-                        </div>
-
-                        <button class="w-full action-button bg-blue-500 text-white hover:bg-blue-600 mt-4">状況を送信 (サーバー同期)</button>
-                    </div>
-                </div>
-
-                <div id="field-chat-screen" class="screen flex flex-col h-full">
-                    <h2 class="text-2xl font-bold mb-4 text-gray-400">現場チャット・レポート</h2>
-
-                    <div class="bg-gray-700 p-4 rounded-lg mb-4">
-                        <div class="flex justify-between items-center mb-3">
-                            <span class="text-lg font-semibold text-white">現在のグループ:</span>
-                            <span id="current-group-id" class="text-lg font-bold text-yellow-300">[グループ未参加]</span>
-                        </div>
-                        <button onclick="scanQrToJoinGroup()" class="w-full bg-orange-500 text-white p-2 rounded-lg hover:bg-orange-600 transition-colors font-semibold">
-                            <span class="inline-block align-middle mr-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"/></svg>
-                            </span>
-                            QRコードでグループに参加/作成
-                        </button>
+                        <button class="w-full action-button bg-blue-500 text-white hover:bg-blue-600 mt-4">状況を送信 (サーバー同期)</button> </div> </div> <div id="field-chat-screen" class="screen flex flex-col h-full"> <h2 class="text-2xl font-bold mb-4 text-gray-400">現場チャット・レポート</h2> <div class="bg-gray-700 p-4 rounded-lg mb-4"> <div class="flex justify-between items-center mb-3"> <span class="text-lg font-semibold text-white">現在のグループ:</span> <span id="current-group-id" class="text-lg font-bold text-yellow-300">[グループ未参加]</span> </div>
+                        <button onclick="scanQrToJoinGroup()" class="w-full bg-orange-500 text-white p-2 rounded-lg hover:bg-orange-600 transition-colors font-semibold"> <span class="inline-block align-middle mr-2"> <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"/></svg> </span>
+                            QRコードでグループに参加/作成 </button>
                     </div>
 
-                    <div id="message-container" class="flex-1 bg-gray-800 p-4 rounded-lg shadow-inner mb-4 overflow-y-auto border border-gray-700 space-y-2">
-                        <div class="text-sm">
-                            <p class="bg-blue-800 p-2 rounded-t-lg rounded-br-lg inline-block text-white max-w-xs">【指令】水物資を優先配布せよ</p>
+                    <div id="message-container" class="flex-1 bg-gray-800 p-4 rounded-lg shadow-inner mb-4 overflow-y-auto border border-gray-700 space-y-2"> <div class="text-sm"> <p class="bg-blue-800 p-2 rounded-t-lg rounded-br-lg inline-block text-white max-w-xs">【指令】水物資を優先配布せよ</p>
                         </div>
-                        <div class="text-sm text-right">
-                            <p class="bg-gray-600 p-2 rounded-t-lg rounded-bl-lg inline-block text-white max-w-xs">【状況報告】現在避難者数 85名です。</p>
+                        <div class="text-sm text-right"> <p class="bg-gray-600 p-2 rounded-t-lg rounded-bl-lg inline-block text-white max-w-xs">【状況報告】現在避難者数 85名です。</p>
                         </div>
                     </div>
 
-                    <div class="bg-gray-700 p-4 rounded-lg">
-                        <label class="block text-lg font-semibold mb-2 text-gray-300">報告の種別 (必須)</label>
-                        <select id="report-type" class="p-2 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-blue-400 mb-3">
-                            <option value="一般連絡">一般連絡</option>
-                            <option value="現場状況報告">現場状況報告</option>
-                            <option value="支援要請">支援要請</option>
-                            <option value="緊急連絡">緊急連絡</option>
-                        </select>
+                    <div class="bg-gray-700 p-4 rounded-lg"> <label class="block text-lg font-semibold mb-2 text-gray-300">報告の種別 (必須)</label> <select id="report-type" class="p-2 w-full border rounded-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-blue-400 mb-3"> <option value="一般連絡">一般連絡</option> <option value="現場状況報告">現場状況報告</option> <option value="支援要請">支援要請</option> <option value="緊急連絡">緊急連絡</option> </select>
 
-                        <div class="flex">
-                            <input type="text" id="chat-input" class="flex-1 p-3 border rounded-l-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-blue-400" placeholder="メッセージを入力...">
-                            <button onclick="sendStructuredMessage()" class="bg-blue-500 text-white p-3 rounded-r-md hover:bg-blue-600 transition-colors action-button">送信</button>
-                        </div>
-                        <p class="text-sm text-gray-400 mt-2">※メッセージはグループ (あれば) と本部に送信されます。</p>
-                    </div>
-                </div>
-
-            {% endif %} </main>
-
-        <footer class="bg-gray-800 p-3 shadow-inner flex justify-around items-center border-t border-gray-700">
-            {% if session.logged_in %}
-                <button onclick="showScreen('home-screen', '現場操作メニュー')" class="flex flex-col items-center text-gray-400 hover:text-blue-400 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                    <span class="text-xs mt-1">ホーム</span>
+                        <div class="flex"> <input type="text" id="chat-input" class="flex-1 p-3 border rounded-l-md bg-gray-600 text-white focus:outline-none focus:ring focus:ring-blue-400" placeholder="メッセージを入力..."> <button onclick="sendStructuredMessage()" class="bg-blue-500 text-white p-3 rounded-r-md hover:bg-blue-600 transition-colors action-button">送信</button> </div>
+                        <p class="text-sm text-gray-400 mt-2">※メッセージはグループ (あれば) と本部に送信されます。</p> </div>
+                </div> {% endif %} </main> <footer class="bg-gray-800 p-3 shadow-inner flex justify-around items-center border-t border-gray-700"> {% if session.logged_in %} <button onclick="showScreen('home-screen', '現場操作メニュー')" class="flex flex-col items-center text-gray-400 hover:text-blue-400 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> <span class="text-xs mt-1">ホーム</span>
                 </button>
                 <button onclick="showScreen('shelter-checkin-screen', '避難所受付')" class="flex flex-col items-center text-gray-400 hover:text-blue-400 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                    <span class="text-xs mt-1">受付</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> <span class="text-xs mt-1">受付</span>
                 </button>
 
-                <a href="{{ url_for('logout') }}" class="flex flex-col items-center text-gray-400 hover:text-red-400 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h4M16 17l5-5-5-5M21 12H9"></path></svg>
-                    <span class="text-xs mt-1">ログアウト</span>
+                <a href="{{ url_for('logout') }}" class="flex flex-col items-center text-gray-400 hover:text-red-400 transition-colors"> <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h4M16 17l5-5-5-5M21 12H9"></path></svg> <span class="text-xs mt-1">ログアウト</span>
                 </a>
-            {% else %}
-                <p class="text-gray-500 text-sm">ログインしてください</p>
-            {% endif %}
-        </footer>
+            {% else %} <p class="text-gray-500 text-sm">ログインしてください</p> {% endif %} </footer> </div> <script> // (提供されたJavaScriptをベースに)
+        const screens = document.querySelectorAll('.screen'); // 'screen' クラスを持つ全てのHTML要素（画面）を取得します
+        const screenTitle = document.getElementById('screen-title'); // 'screen-title' IDを持つ要素（ヘッダーのタイトル）を取得します
+        const connectionStatus = document.getElementById('connection-status'); // 'connection-status' IDを持つ要素（接続状態）を取得します
 
-    </div>
-
-    <script>
-        // (提供されたJavaScriptをベースに)
-        const screens = document.querySelectorAll('.screen');
-        const screenTitle = document.getElementById('screen-title');
-        const connectionStatus = document.getElementById('connection-status');
-
-        // messageContainer はログインしていないと存在しない可能性があるため、存在チェックを追加
-        // ★修正点: document.getElementById('message-container') はグローバルスコープではなく、
+        // messageContainer はログインしていないと存在しない可能性があるため、グローバルスコープでは宣言しません。
         // 必要な関数 (appendSystemMessage, sendStructuredMessage) の内部で都度取得するようにします。
-        // (ログイン前に実行されると null になるため)
 
-        let currentGroupId = null;
+        let currentGroupId = null; // 現在参加しているグループIDを保存する変数（初期値は null = 未参加）
 
+        // 指定されたIDの画面を表示し、ヘッダーのタイトルを変更する関数
         function showScreen(screenId, titleText) {
-            screens.forEach(screen => {
-                screen.style.display = 'none';
+            screens.forEach(screen => { // すべての 'screen' 要素に対して
+                screen.style.display = 'none'; // 画面を非表示にする
             });
-            const targetScreen = document.getElementById(screenId);
-            if (targetScreen) {
-                targetScreen.style.display = 'flex';
-                targetScreen.classList.add('flex-1', 'flex-col');
-                screenTitle.textContent = titleText;
+            const targetScreen = document.getElementById(screenId); // 表示したい画面のIDを取得します
+            if (targetScreen) { // もしその画面が存在すれば
+                targetScreen.style.display = 'flex'; // 画面を表示します（flex設定で）
+                targetScreen.classList.add('flex-1', 'flex-col'); // flex関連のクラスを追加（レイアウト用）
+                screenTitle.textContent = titleText; // ヘッダーのタイトルを指定されたテキストに変更します
             }
         }
 
         // --- (scanQrToJoinGroup, appendSystemMessage, sendStructuredMessage, checkConnection 関数は提供されたものと同じ) ---
         // (これらの関数はログイン時のみ呼び出される想定のため、エラーハンドリングは省略)
 
+        // QRコードでのグループ参加をシミュレートする関数
         function scanQrToJoinGroup() {
-            const scannedId = prompt("QRコードをスキャンしました。\nグループIDを入力してください (例: MEDICAL_TEAM_01):");
-            const groupIdDisplay = document.getElementById('current-group-id');
-            if (scannedId && scannedId.trim() !== "") {
-                currentGroupId = scannedId.trim().toUpperCase();
-                groupIdDisplay.textContent = currentGroupId;
-                groupIdDisplay.classList.remove('text-yellow-300');
-                groupIdDisplay.classList.add('text-green-400');
-                appendSystemMessage(`グループ「${currentGroupId}」に接続しました。`);
-            } else if (scannedId !== null) {
-                alert("グループIDが無効です。");
+            const scannedId = prompt("QRコードをスキャンしました。\nグループIDを入力してください (例: MEDICAL_TEAM_01):"); // 簡易的な入力ダイアログを表示します
+            const groupIdDisplay = document.getElementById('current-group-id'); // グループID表示欄を取得します
+            if (scannedId && scannedId.trim() !== "") { // もしIDが入力され、空でなければ
+                currentGroupId = scannedId.trim().toUpperCase(); // 入力値を整形（空白削除、大文字化）して保存
+                groupIdDisplay.textContent = currentGroupId; // 画面の表示を更新
+                groupIdDisplay.classList.remove('text-yellow-300'); // 黄色（未参加）のスタイルを削除
+                groupIdDisplay.classList.add('text-green-400'); // 緑色（参加中）のスタイルを追加
+                appendSystemMessage(`グループ「${currentGroupId}」に接続しました。`); // チャット欄にシステムメッセージを表示
+            } else if (scannedId !== null) { // キャンセル (null) 以外で、IDが空だった場合
+                alert("グループIDが無効です。"); // エラーアラートを表示
             }
         }
 
+        // システムメッセージ（グループ参加時など）をチャット欄に追加する関数
         function appendSystemMessage(message) {
-            // ★修正: 関数呼び出し時に message-container を取得
-            const messageContainer = document.getElementById('message-container');
-            if (!messageContainer) return; // コンテナがなければ何もしない
-            const newMessageDiv = document.createElement('div');
-            newMessageDiv.className = 'text-center text-xs text-gray-500 my-1';
-            newMessageDiv.textContent = message;
-            messageContainer.appendChild(newMessageDiv);
-            messageContainer.scrollTop = messageContainer.scrollHeight;
+            const messageContainer = document.getElementById('message-container'); // チャットのメッセージコンテナを取得
+            if (!messageContainer) return; // もしコンテナが存在しなければ（ログイン前など）、何もしない
+            const newMessageDiv = document.createElement('div'); // 新しいdiv要素を作成
+            newMessageDiv.className = 'text-center text-xs text-gray-500 my-1'; // 中央揃えのシステムメッセージ用スタイルを適用
+            newMessageDiv.textContent = message; // メッセージテキストを設定
+            messageContainer.appendChild(newMessageDiv); // コンテナに新しいメッセージを追加
+            messageContainer.scrollTop = messageContainer.scrollHeight; // スクロール位置を一番下に移動
         }
 
+        // 構造化チャットメッセージを送信（画面に追加）する関数
         function sendStructuredMessage() {
-            // ★修正: 関数呼び出し時に message-container を取得
-            const messageContainer = document.getElementById('message-container');
-            if (!messageContainer) return; // コンテナがなければ何もしない
-            const inputElement = document.getElementById('chat-input');
-            const typeElement = document.getElementById('report-type');
-            const messageText = inputElement.value.trim();
-            const reportType = typeElement.value;
-            if (messageText === '') { return; }
-            const groupPrefix = currentGroupId ? `[グループ: ${currentGroupId}] ` : '';
-            const fullMessage = `【${reportType}】 ${groupPrefix}${messageText}`;
-            const newMessageDiv = document.createElement('div');
-            newMessageDiv.className = 'text-sm text-right';
-            const messageP = document.createElement('p');
-            messageP.className = 'bg-gray-600 p-2 rounded-t-lg rounded-bl-lg inline-block text-white max-w-xs';
-            messageP.textContent = fullMessage;
-            newMessageDiv.appendChild(messageP);
-            messageContainer.appendChild(newMessageDiv);
-            messageContainer.scrollTop = messageContainer.scrollHeight;
-            inputElement.value = '';
+            const messageContainer = document.getElementById('message-container'); // チャットのメッセージコンテナを取得
+            if (!messageContainer) return; // もしコンテナが存在しなければ、何もしない
+            const inputElement = document.getElementById('chat-input'); // メッセージ入力欄を取得
+            const typeElement = document.getElementById('report-type'); // 報告種別ドロップダウンを取得
+            const messageText = inputElement.value.trim(); // 入力されたテキスト（前後の空白削除）
+            const reportType = typeElement.value; // 選択された報告種別
+            if (messageText === '') { return; } // メッセージが空なら何もしない
+            const groupPrefix = currentGroupId ? `[グループ: ${currentGroupId}] ` : ''; // グループIDの接頭辞（参加していれば）
+            const fullMessage = `【${reportType}】 ${groupPrefix}${messageText}`; // 最終的なメッセージ文字列を作成
+
+            const newMessageDiv = document.createElement('div'); // 新しいdiv要素を作成
+            newMessageDiv.className = 'text-sm text-right'; // 右揃え（送信）のスタイル
+            const messageP = document.createElement('p'); // pタグ（メッセージ本体）を作成
+            messageP.className = 'bg-gray-600 p-2 rounded-t-lg rounded-bl-lg inline-block text-white max-w-xs'; // 送信メッセージ用のスタイル
+            messageP.textContent = fullMessage; // メッセージテキストを設定
+
+            newMessageDiv.appendChild(messageP); // divにpタグを追加
+            messageContainer.appendChild(newMessageDiv); // コンテナに新しいメッセージ（div）を追加
+            messageContainer.scrollTop = messageContainer.scrollHeight; // スクロール位置を一番下に移動
+            inputElement.value = ''; // 入力欄を空にする
+
+            // コンソールログに送信データをシミュレートして出力
             console.log('--- 構造化データ送信シミュレーション (QRグループ対応) ---');
-            console.log('送信者ID:', '{{ session.user_id | default("不明") }}'); // ★変更点: セッションからIDを注入
-            console.log('グループID:', currentGroupId || '全体/本部');
-            console.log('種別:', reportType);
-            console.log('メッセージ:', messageText);
-            console.log('日時:', new Date().toISOString());
+            console.log('送信者ID:', '{{ session.user_id | default("不明") }}'); // [Jinja2] セッションからユーザーIDを出力（失敗時は"不明"）
+            console.log('グループID:', currentGroupId || '全体/本部'); // グループID（未参加なら'全体/本部'）
+            console.log('種別:', reportType); // 報告種別
+            console.log('メッセージ:', messageText); // メッセージ本文
+            console.log('日時:', new Date().toISOString()); // 現在の日時
             console.log('---------------------------------------------------------');
         }
 
+        // 接続状態をダミーでチェックする関数
         function checkConnection() {
-            const isOnline = Math.random() > 0.3; // ダミー判定
-            if (isOnline) {
-                connectionStatus.textContent = 'オンライン';
-                connectionStatus.classList.remove('bg-red-500');
-                connectionStatus.classList.add('bg-green-500');
-            } else {
-                connectionStatus.textContent = 'オフライン';
-                connectionStatus.classList.remove('bg-green-500');
-                connectionStatus.classList.add('bg-red-500');
+            const isOnline = Math.random() > 0.3; // 70%の確率でオンラインになるダミー判定
+            if (isOnline) { // オンラインの場合
+                connectionStatus.textContent = 'オンライン'; // テキストを「オンライン」に
+                connectionStatus.classList.remove('bg-red-500'); // 赤色（オフライン）のスタイルを削除
+                connectionStatus.classList.add('bg-green-500'); // 緑色（オンライン）のスタイルを追加
+            } else { // オフラインの場合
+                connectionStatus.textContent = 'オフライン'; // テキストを「オフライン」に
+                connectionStatus.classList.remove('bg-green-500'); // 緑色（オンライン）のスタイルを削除
+                connectionStatus.classList.add('bg-red-500'); // 赤色（オフライン）のスタイルを追加
             }
         }
 
-        // ★変更点: 初期画面の設定をFlaskのセッション情報(logged_in)を使って動的に切り替える
+        // ページの読み込みが完了した時に実行される処理
         window.onload = function() {
-            {% if session.logged_in %}
+            {% if session.logged_in %} // [Jinja2] もしFlaskのセッションがログイン済み（True）なら
                 // ログイン済み (True) の場合
-                showScreen('home-screen', '現場操作メニュー');
-            {% else %}
+                showScreen('home-screen', '現場操作メニュー'); // 'home-screen' を表示
+            {% else %} // [Jinja2] そうでなければ（未ログイン False または None）
                 // 未ログイン (False または None) の場合
-                showScreen('login-screen', '現場職員ログイン');
-            {% endif %}
+                showScreen('login-screen', '現場職員ログイン'); // 'login-screen' を表示
+            {% endif %} // [Jinja2] if文の終了
 
-            checkConnection();
-            setInterval(checkConnection, 10000); // 10秒ごとに接続チェック
+            checkConnection(); // 接続チェックを初回実行
+            setInterval(checkConnection, 10000); // 10秒ごと（10000ミリ秒）に接続チェックを繰り返す
         };
-    </script>
-</body>
-</html>
+    </script> </body> </html> ```

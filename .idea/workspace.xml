@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a6d0d2c5-533e-4e61-ba7f-d0ee7978faf1" name="変更" comment="安否状況報告画面を追加しました">
+    <list default="true" id="a6d0d2c5-533e-4e61-ba7f-d0ee7978faf1" name="変更" comment="現場チャット画面を追加しました">
       <change beforePath="$PROJECT_DIR$/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -90,7 +90,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1761789092079</updated>
-      <workItem from="1761789093085" duration="3602000" />
+      <workItem from="1761789093085" duration="4141000" />
     </task>
     <task id="LOCAL-00001" summary="画面の作成を作成をしました">
       <option name="closed" value="true" />
@@ -132,7 +132,23 @@
       <option name="project" value="LOCAL" />
       <updated>1761792331478</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="炊き出し画面を追加しました">
+      <option name="closed" value="true" />
+      <created>1761792748711</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1761792748711</updated>
+    </task>
+    <task id="LOCAL-00007" summary="現場チャット画面を追加しました">
+      <option name="closed" value="true" />
+      <created>1761793035311</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1761793035311</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -153,9 +169,11 @@
     <MESSAGE value="画面の作成を作成をしました" />
     <MESSAGE value="サンプルコードを追加しました" />
     <MESSAGE value="安否状況報告画面を追加しました" />
-    <option name="LAST_COMMIT_MESSAGE" value="安否状況報告画面を追加しました" />
+    <MESSAGE value="炊き出し画面を追加しました" />
+    <MESSAGE value="現場チャット画面を追加しました" />
+    <option name="LAST_COMMIT_MESSAGE" value="現場チャット画面を追加しました" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/sotukenrazupaiver2$sotukenrazupaiver2.coverage" NAME="sotukenrazupaiver2 のカバレッジ結果" MODIFIED="1761792671688" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/sotukenrazupaiver2$sotukenrazupaiver2.coverage" NAME="sotukenrazupaiver2 のカバレッジ結果" MODIFIED="1761793229861" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
   </component>
 </project>
